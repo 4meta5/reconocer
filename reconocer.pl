@@ -2,6 +2,7 @@
 * Recognize (some) Recurrence Relations
 * arithmetic, geometric sequences
 */
+:- use_module(library(clpfd)).
 
 arithmetic([X,Y],Q) :-
     Q is Y-X.
