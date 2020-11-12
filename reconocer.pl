@@ -20,14 +20,9 @@ geometric([X,Y|T],Q) :-
 known(L) :-
     arithmetic(L,_);geometric(L,_).
 
-nth([H0|_],0,H0).
-/*
-?- nth([1,2,3,4],1,R).
-ERROR: Stack limit (1.0Gb) exceeded
-*/
-nth([H0|Seq],N,R) :-
-    known([H0|Seq]),
-    arithmetic([H0|Seq],Q) -> X is N*Q, R is H0+X,
+nth_arithmetic([H0|Seq],N,R) :-
+    arithmetic([H0|Seq],Q) -> X is N*Q, R is H0+X.
+nth_geometric([H0|Seq],N,R) :-
     geometric([H0|Seq],Q) -> X is Q**N, R is H0*X.
 
 partial_sums_arithmetic([H0|_],0,H0).
