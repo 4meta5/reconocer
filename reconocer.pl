@@ -5,38 +5,21 @@
 */
 :- use_module(library(clpfd)).
 
-/*Recognize Sequence from List of Integers*/
-known(L) :-
-    arithmetic(L,_);geometric(L,_).
-
-/* WARNING: only written for equations where B and C are negative (see input assumptions for linear)
-?- quadratic(1,1,2,R).
-R = [1.0, 2.0].
-?- quadratic(1,3,18,R).
-R = [3.0, 6.0].
-?- quadratic(1,3,10,R).
-R = [2.0, 5.0].
+/* 
+Quadratic Formula
+src: https://stackoverflow.com/questions/25356094/quadratic-equation-solving-in-prolog
+?- quadratic(1,-1,-2,R).
+R = [-1.0, 2.0].
+?- quadratic(1,-3,-10,R).
+R = [-2.0, 5.0].
 */
-quadratic(A,NegB,NegC,[X1,NegX2]) :-
-    B2 is NegB*NegB,
-    AC is (4 * A * NegC),
-    RS is B2 + AC,
-    SQ is sqrt(RS),
-    X1 is (SQ-NegB)/2,
-    NegX2 is (NegB+SQ)/2.
-/* Linear Homogenous Equation Degree 2
-* input equation a_n = (B)a_n-1 + (C)a_n-2 s.t. B,C are both positive integers
-* A0, A1 are initial conditions when n = 0,1 respectively
-* Result provides n-term formula: A_n = C1*X1^n + C2*NegX2^n
-?- linear([3,18],[2,15],R).
-R = [[3.0, 3.0], [6.0, -1.0]].
-?- linear([3,10],[5,10],R).
-R = [[2.0, 5.0], [5.0, 0.0]].
-*/
-linear([B, C],[A0, A1],[[X1,C1],[NegX2,C2]]) :-
-    quadratic(1,B,C,[X1,NegX2]),
-    C1 is ((A0*NegX2)+A1)/(X1+NegX2),
-    C2 is A0-C1.
+sqroot(X,R) :- X*X#=R,X#>=0.
+quadratic(A,B,C,R) :-
+    D is (B^2)-(4*A*C),
+    (D<0 -> R = [];
+    D#=0 -> X is (-B)/(2*A), R = [X];
+    sqroot(S,D), X1 is (-B-S)/(2*A), 
+      X2 is (-B+S)/(2*A), R = [X1,X2]).
 /* Solve system of linear equations for X,Y \in 1..10
 *  C1*X + C2*Y = S1
 *  D1*X + D2*Y = S2
@@ -47,7 +30,7 @@ Y = 5.
 X = 1,
 Y = 3.
 */
-linear_eq(C1,C2,S1,D1,D2,S2,X,Y) :-
+linear_sys(C1,C2,S1,D1,D2,S2,Y,X) :-
     X in 1..10,Y in 1..10,
     A1 #= X*C1,
     A2 #= Y*C2,
@@ -55,24 +38,49 @@ linear_eq(C1,C2,S1,D1,D2,S2,X,Y) :-
     B1 #= X*D1,
     B2 #= Y*D2,
     S2 #= B1+B2.
-
-/*Recognize simple linear recurrences*/
-linear_rec(L,_) :- length(L,N),N<3,!. %Cut to end recursion
-/*
-TODO FIX
-?- linear_rec([1,4,13,25],R).
+/* Recognize linear recurrences to ascertain parameterization
+?- linear_par([1,3,5,11],R,X).
+R = [1, 2],
+X = [1, 3].
+?- linear_par([1,3,5,11,21],R,X).
+R = [1, 2],
+X = [1, 3].
+?- linear_par([1,3,5,11,22],R,X).
 false.
+?- linear_par([2,7,11,25,47],R,X).
+R = [1, 2],
+X = [2, 7].
 */
-linear_rec([H1,H2,H3,H4|T],[B,C]) :-
-    /*solve for B, C from H3 = H1*B + H2*C, H4 = H2*B + H3*C*/
-    linear_eq(H1,H2,H3,H2,H3,H4,B,C),
-    linear_rec([H2,H3,H4|T],[B,C]).
-/*Introduce arity3 method for processing*/
-linear_rec([H1,H2|T],[B,C],[A0,A1]) :-
+linear_par(L,_) :- length(L,N),N=<3,!. %Cut to end recursion
+linear_par([H1,H2,H3,H4|T],[B,C]) :-
+    /*solves for B, C from H3 = H1*B + H2*C, H4 = H2*B + H3*C*/
+    linear_sys(H1,H2,H3,H2,H3,H4,B,C),
+    linear_par([H2,H3,H4|T],[B,C]).
+linear_par([H1,H2|T],[B,C],[A0,A1]) :-
     length([H1,H2|T],N),N>=4,
     A0 is H1,
     A1 is H2,
-    linear_rec([H1,H2|T],[B,C]).
+    linear_par([H1,H2|T],[B,C]).
+/* Linear Homogenous Equation Degree 2
+* input equation a_n = (B)a_n-1 + (C)a_n-2 
+* A0, A1 are initial conditions when n = 0,1 respectively
+* Result yields n-term formula: A_n = C1*X1^n + C2*X2^n in the form [[X1,C1],[X2,C2]]
+?- linear_rec([2,7,11,25,47],R).
+R = [[-1, -1], [2, 3]].
+*/
+linear_rec(Seq,[[X1,C1],[X2,C2]]) :-
+    linear_par(Seq,[B,C],[A0,A1]),
+    NB is -B,NC is -C,quadratic(1,NB,NC,[X1,X2]),
+    C1 in -10..10,C2 in -10..10,
+    A0 #= C1+C2,
+    C3 #= C1*X1,
+    C4 #= C2*X2,
+    A1 #= C3+C4.
+/*A_n = C1*X1^n + C2*X2^n*/
+linear_nth([[X1,C1],[X2,C2]],N,R) :-
+    T1 is C1*(X1**N),
+    T2 is C2*(X2**N),
+    R is T1+T2.
 
 arithmetic([X,Y],Q) :-
     Q is Y-X.
@@ -86,7 +94,21 @@ geometric([X,Y|T],Q) :-
     geometric([X,Y],Q),
     geometric([Y|T],Q).
 
-/*Nth Term Formulas*/
+/*Recognize Sequence from List of Integers*/
+known(L) :-
+    arithmetic(L,_);
+    geometric(L,_);
+    linear_rec(L,_).
+
+/*Nth Term Formulas
+INCORRECT
+?- nth_linear([1,3,5,11],10,R).
+R = 6149.000569198215.
+*/
+nth_linear(Seq,N,R) :-
+    linear_rec(Seq,C,I),
+    linear(C,I,[[X1,C1],[NegX2,C2]]),
+    R is ((C1 * (X1**N))-(C2*(NegX2**N))).
 nth_arithmetic([H0|Seq],N,R) :-
     arithmetic([H0|Seq],Q) -> X is N*Q, R is H0+X.
 nth_geometric([H0|Seq],N,R) :-
