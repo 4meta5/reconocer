@@ -5,6 +5,12 @@
 */
 :- use_module(library(clpfd)).
 
+/*Recognize Sequence from List of Integers*/
+known(L) :-
+    arithmetic(L,_);
+    geometric(L,_);
+    linear_rec(L,_).
+
 /* 
 Quadratic Formula
 src: https://stackoverflow.com/questions/25356094/quadratic-equation-solving-in-prolog
@@ -64,7 +70,8 @@ linear_par([H1,H2|T],[B,C],[A0,A1]) :-
 /* Linear Homogenous Equation Degree 2
 * input equation a_n = (B)a_n-1 + (C)a_n-2 
 * A0, A1 are initial conditions when n = 0,1 respectively
-* Result yields n-term formula: A_n = C1*X1^n + C2*X2^n in the form [[X1,C1],[X2,C2]]
+* Result represents n-term coefficients for A_n = C1*X1^n + C2*X2^n 
+* in the form [[X1,C1],[X2,C2]]
 ?- linear_rec([2,7,11,25,47],R).
 R = [[-1, -1], [2, 3]].
 */
@@ -76,7 +83,14 @@ linear_rec(Seq,[[X1,C1],[X2,C2]]) :-
     C3 #= C1*X1,
     C4 #= C2*X2,
     A1 #= C3+C4.
-/*A_n = C1*X1^n + C2*X2^n*/
+/* Nth Term Formula: A_n = C1*X1^n + C2*X2^n from first arg [[X1,C1],[X2,C2]]
+?- linear_nth([[-1, -1], [2, 3]],5,R).
+R = 97.
+?- linear_nth([[-1, -1], [2, 3]],4,R).
+R = 47.
+?- linear_nth([[-1, -1], [2, 3]],3,R).
+R = 25.
+*/
 linear_nth([[X1,C1],[X2,C2]],N,R) :-
     T1 is C1*(X1**N),
     T2 is C2*(X2**N),
@@ -94,27 +108,11 @@ geometric([X,Y|T],Q) :-
     geometric([X,Y],Q),
     geometric([Y|T],Q).
 
-/*Recognize Sequence from List of Integers*/
-known(L) :-
-    arithmetic(L,_);
-    geometric(L,_);
-    linear_rec(L,_).
-
-/*Nth Term Formulas
-INCORRECT
-?- nth_linear([1,3,5,11],10,R).
-R = 6149.000569198215.
-*/
-nth_linear(Seq,N,R) :-
-    linear_rec(Seq,C,I),
-    linear(C,I,[[X1,C1],[NegX2,C2]]),
-    R is ((C1 * (X1**N))-(C2*(NegX2**N))).
 nth_arithmetic([H0|Seq],N,R) :-
     arithmetic([H0|Seq],Q) -> X is N*Q, R is H0+X.
 nth_geometric([H0|Seq],N,R) :-
     geometric([H0|Seq],Q) -> X is Q**N, R is H0*X.
 
-/*Partial Sum Formulas*/
 partial_sums_arithmetic([H0|_],0,H0).
 partial_sums_arithmetic([H0|Seq],N,R) :-
     arithmetic([H0|Seq],Q),
@@ -127,22 +125,19 @@ partial_sums_geometric([H0|Seq],N,R) :-
     Q = 1 -> R is (N+1)*H0,
     Q \= 1 -> R is (((Q**(N+1))-1)*H0)/(Q-1).
 
-/*Factorial*/
-fact(X,1) :- X =< 1.
-fact(X,R) :- 
-    X1 is X - 1,
-    fact(X1, R1),
-    R is R1*X.
+factorial(X,R) :- factorial(X,1,R).
+factorial(X,R,R) :- X =< 1.
+factorial(X,Y,R) :- 
+    Y1 is Y*X,
+    X1 is X-1,
+    factorial(X1,Y1,R).
 /*Binomial Coefficient, N choose R where order doesn't matter*/
 binomial_co(N,R,Result) :-
-    permutation(N,R,R1),
-    fact(R,R2),
-    Result is R1/R2.
-/*Permutation Count, N choose R where order matters*/
-permutation(N,R,Result) :-
-    fact(N,R1),
-    fact(N-R,R2),
-    Result is R1/R2.
+    factorial(N,R1),
+    factorial(N-R,R2),
+    factorial(R,R3),
+    R4 #= R2*R3,
+    Result is R1/R4.
 
 /*Catalan Numbers
 * C_n = \sum_{k=0}{n-1} C_k * C_{n-1-k}
@@ -162,62 +157,20 @@ der(N,R) :-
     der(N2,R2),
     R is (N1 * (R1 + R2)).
 /*Fibonacci Numbers*/
-fib(0,0) :- !.
-fib(1,1) :- !.
 fib(N,R) :-
-    N1 is N-1,
-    N2 is N-2,
-    fib(N1,R1),
-    fib(N2,R2),
-    R is R1 + R2.
-/*Lucas Numbers (Fibonacci w different initial values)*/
-lucas(0,2) :- !.
-lucas(1,1) :- !.
+    fib(2,N,1,1,R).
+fib(X,N,_,F2,F2) :-
+    X>=N.
+fib(X,N,F1,F2,R) :-
+    X<N,
+    X1 is X+1,
+    F3 is F1+F2,
+    fib(X1,N,F2,F3,R).
+/*Lucas Numbers*/
 lucas(N,R) :-
-    N1 is N-1,
-    N2 is N-2,
-    lucas(N1,R1),
-    lucas(N2,R2),
-    R is R1 + R2.
+    fib(2,N,2,1,R).
 
-/*Pascal's Recurrence*/
-pascal(X,X,1).
-pascal(X,0,R) :-
-    X>0 -> R is 0.
-pascal(P,K,Result) :-
-    K >= 1,
-    P1 is P-1, P1 >= K,
-    pascal(P1,K,R1),
-    K1 is K-1,
-    pascal(P1,K1,R2),
-    Result is R1 + R2.
-/*Second Stirling Numbers*/
-second_stir(X,X,1).
-second_stir(X,0,R) :-
-    X>0 -> R is 0.
-second_stir(P,K,Result) :-
-    K >= 1,
-    P1 is P-1, P1 >= K,
-    second_stir(P1,K,R1),
-    K1 is K-1,
-    second_stir(P1,K1,R2),
-    Result is ((K*R1) + R2).
-/*First Stirling Numbers*/
-first_stir(X,X,1).
-first_stir(X,0,R) :-
-    X>0 -> R is 0.
-first_stir(P,K,Result) :-
-    K >= 1,
-    P1 is P-1, P1 >= K,
-    first_stir(P1,K,R1),
-    K1 is K-1,
-    first_stir(P1,K1,R2),
-    Result is ((P1*R1) + R2).
-
-/*SEQUENCES
-* TODO: sequence extensions for 
-* (1)first stirling (2)second stirling (3)pascal
-*/
+/*Sequence Generators*/
 binomial_seq(N,List) :-
     length(List,N),
     length(L1,N),
