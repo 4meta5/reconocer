@@ -1,6 +1,6 @@
 # reconocer
 
-Recognize Recurrence Relations
+Recognize Recurrence Relations and Special Integer Sequences
 
 ## purpose
 
@@ -9,3 +9,7 @@ tool for recognizing recurrence relations to derive
 * partial sums
 
 inspired by [this blog post](http://www.ryanhmckenna.com/2015/06/automatically-finding-recurrence.html)
+
+## usage
+
+TODO
