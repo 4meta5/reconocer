@@ -71,12 +71,14 @@ linear_nth([[X1,C1],[X2,C2]],N,R) :-
 arithmetic([X,Y],Q) :-
     Q is Y-X.
 arithmetic([X,Y|T],Q) :-
+    length(T,Z),Z>0,
     arithmetic([X,Y],Q),
     arithmetic([Y|T],Q).
 
 geometric([X,Y],Q) :-
     Q is Y/X.
 geometric([X,Y|T],Q) :-
+    length(T,Z),Z>0,
     geometric([X,Y],Q),
     geometric([Y|T],Q).
 
