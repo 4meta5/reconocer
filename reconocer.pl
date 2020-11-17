@@ -123,14 +123,15 @@ cat(A,B,[H|T]) :-
     H is 2 * (2 * B - 1) * A / B1,
     cat(H,B1,T).
 /*Derangement Numbers*/
-der(1,0).
-der(2,1).
 der(N,R) :-
-    N1 is N-1,
-    N2 is N-2,
-    der(N1,R1),
-    der(N2,R2),
-    R is (N1 * (R1 + R2)).
+    der(2,N,0,1,R).
+der(X,N,R,_,R) :- X is N+1.
+der(X,N,_,R,R) :- X=N.
+der(X,N,D1,D2,R) :-
+    X<N,
+    X1 is X+1,
+    D3 is (X * (D1 + D2)),
+    der(X1,N,D2,D3,R).
 /*Fibonacci Numbers*/
 fib(N,R) :-
     fib(2,N,1,1,R).
