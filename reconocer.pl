@@ -2,23 +2,25 @@
 
 /*Recognize Sequence, Print Functions Available and Calling Information*/
 rec(L) :-
-    arithmetic(L,_) -> write('Arithmetic Series');
-    geometric(L,_) -> write('Geometric Series');
+    special_rec(L),!;
+    arithmetic(L,_) -> write('Arithmetic Series'),!;
+    geometric(L,_) -> write('Geometric Series'),!;
     linear_rec(L,_) -> write('Linear Homogenous Eq of Deg2');
-    special_rec(L); write('Sequence Not Recognized').
+    write('Sequence Not Recognized').
 /*Recognize Sequence and Compute Nth Term*/
 nth(L,N,R) :-
     (nth_arithmetic(L,N,R);
     nth_geometric(L,N,R);
     linear_rec(L,X) -> linear_nth(X,N,R);
     special_nth(L,N,X) -> append(_,[R],X)).
-/*Recognize Sequence and Compute Sum [X,N] s.t. X < N*/
+/*Recognize Sequence and Compute Sum [0,N] s.t. X < N*/
 nsum(L,N,R) :- 
     sum_arithmetic(L,N,R);sum_geometric(L,N,R).
+/*Recognize Sequence and Compute Sum [X,N] s.t. X < N*/
 sum(L,X,N,R) :-
     X<N,
     (sum_arithmetic(L,X,R1) -> sum_arithmetic(L,N,R2),R is R2-R1;
-    sum_geometric(L,X,R1) -> sum_geometric(L,N,R2),R is R1-R2).
+    sum_geometric(L,X,R1) -> sum_geometric(L,N,R2),R is R2-R1).
 
 /*Quadratic Formula*/
 sqroot(X,R) :- X*X#=R,X#>=0.
@@ -70,17 +72,15 @@ linear_nth([[X1,C1],[X2,C2]],N,R) :-
 
 arithmetic([X,Y],Q) :-
     Q is Y-X.
-arithmetic([X,Y|T],Q) :-
-    length(T,Z),Z>0,
+arithmetic([X,Y,Z|T],Q) :-
     arithmetic([X,Y],Q),
-    arithmetic([Y|T],Q).
+    arithmetic([Y,Z|T],Q).
 
 geometric([X,Y],Q) :-
     Q is Y/X.
-geometric([X,Y|T],Q) :-
-    length(T,Z),Z>0,
+geometric([X,Y,Z|T],Q) :-
     geometric([X,Y],Q),
-    geometric([Y|T],Q).
+    geometric([Y,Z|T],Q).
 
 nth_arithmetic([H0|Seq],N,R) :-
     arithmetic([H0|Seq],Q) -> X is N*Q, R is H0+X.
@@ -148,11 +148,12 @@ lucas(N,R) :-
 /*Recognize Special Sequences*/
 special_rec(Seq) :-
     length(Seq,N),
-    (cat_seq(N,L1),L1=Seq -> write('Catalan Numbers'),!;
-    der_seq(N,L2),L2=Seq -> write('Derangement Numbers'),!;
+    N1 is N-1,
+    (cat_seq(N1,L1),L1=Seq -> write('Catalan Numbers'),!;
     fib_seq(N,L3),L3=Seq -> write('Fibonacci Numbers'),!;
+    der_seq(N,L2),L2=Seq -> write('Derangement Numbers'),!;
     lucas_seq(N,L4),L4=Seq -> write('Lucas Numbers'),!;
-    binomial_seq(N,L5),L5=Seq -> write('Binomial Coefficients'),!;
+    binomial_seq(N,L5),L5=Seq -> write('Binomial Coefficients');
     write('Special Sequence Not Recognized')).
 /*Recognize Special Sequence and Output List with Nth Term*/
 special_nth(Seq,N,R) :-
