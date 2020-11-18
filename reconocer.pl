@@ -1,18 +1,32 @@
 :- use_module(library(clpfd)).
 
+/*Ensure Every Input Sequence is Monotonically Increasing*/
+mincreasing([A,B]) :- A=<B.
+mincreasing([A,B,C|T]) :-
+    mincreasing([A,B]),
+    mincreasing([B,C|T]).
+
+/*Docs, called in rec output if input sequence is recognized*/
+half :-
+    write('To compute the Nth term, call `nth(Seq,N,R)`'),nl.
+full :-
+    half,
+    write('To compute sum from 0 to N, call `nsum(Seq,N,R)`'),nl,
+    write('To compute sum from X to N, call `sum(Seq,X,N,R)`').
+
 /*Recognize Sequence, Print Functions Available and Calling Information*/
 rec(L) :-
-    special_rec(L),!;
-    arithmetic(L,_) -> write('Arithmetic Series'),!;
-    geometric(L,_) -> write('Geometric Series'),!;
-    linear_rec(L,_) -> write('Linear Homogenous Eq of Deg2');
-    write('Sequence Not Recognized').
+    mincreasing(L),
+    (special_rec(L),nl,half,!;
+    arithmetic(L,_) -> write('~~Arithmetic Series~~'),nl,full,!;
+    geometric(L,_) -> write('~~Geometric Series~~'),nl,full,!;
+    linear_rec(L,_) -> write('Linear Homogenous Eq of Deg2'),nl,half).
 /*Recognize Sequence and Compute Nth Term*/
 nth(L,N,R) :-
-    (nth_arithmetic(L,N,R);
+    (special_nth(L,N,R);
+    nth_arithmetic(L,N,R);
     nth_geometric(L,N,R);
-    linear_rec(L,X) -> linear_nth(X,N,R);
-    special_nth(L,N,X) -> append(_,[R],X)).
+    linear_rec(L,X) -> linear_nth(X,N,R)).
 /*Recognize Sequence and Compute Sum [0,N] s.t. X < N*/
 nsum(L,N,R) :- 
     sum_arithmetic(L,N,R);sum_geometric(L,N,R).
@@ -100,20 +114,6 @@ sum_geometric([H0|Seq],N,R) :-
     (Q #= 1 -> R is N1*H0;
     R is (((Q^N1)-1)*H0)/(Q-1)).
 
-factorial(X,R) :- factorial(X,1,R).
-factorial(X,R,R) :- X =< 1.
-factorial(X,Y,R) :- 
-    Y1 is Y*X,
-    X1 is X-1,
-    factorial(X1,Y1,R).
-/*Binomial Coefficient, N choose R where order doesn't matter*/
-binomial_co(N,R,Result) :-
-    factorial(N,R1),
-    factorial(N-R,R2),
-    factorial(R,R3),
-    R4 #= R2*R3,
-    Result is R1/R4.
-
 /*Catalan Numbers
 * C_n = \sum_{k=0}{n-1} C_k * C_{n-1-k}
 */
@@ -150,29 +150,19 @@ lucas(N,R) :-
 special_rec(Seq) :-
     length(Seq,N),
     N1 is N-1,
-    (cat_seq(N1,L1),L1=Seq -> write('Catalan Numbers'),!;
-    fib_seq(N,L3),L3=Seq -> write('Fibonacci Numbers'),!;
-    der_seq(N,L2),L2=Seq -> write('Derangement Numbers'),!;
-    lucas_seq(N,L4),L4=Seq -> write('Lucas Numbers'),!;
-    binomial_seq(N,L5),L5=Seq -> write('Binomial Coefficients');
-    write('Special Sequence Not Recognized')).
+    (cat_seq(N1,L1),L1=Seq -> write('**Catalan Numbers**'),!;
+    fib_seq(N,L3),L3=Seq -> write('**Fibonacci Numbers**'),!;
+    der_seq(N,L2),L2=Seq -> write('**Derangement Numbers**'),!;
+    lucas_seq(N,L4),L4=Seq -> write('**Lucas Numbers**')).
 /*Recognize Special Sequence and Output List with Nth Term*/
 special_nth(Seq,N,R) :-
     length(Seq,L),L<N,
     (cat_seq(L,Seq) -> cat_seq(N,R);
     der_seq(L,Seq) -> der_seq(N,R);
     fib_seq(L,Seq) -> fib_seq(N,R);
-    lucas_seq(L,Seq) -> lucas_seq(N,R);
-    binomial_seq(L,Seq) -> binomial_seq(N,R)).
+    lucas_seq(L,Seq) -> lucas_seq(N,R)).
 
 /*Sequence Generators*/
-binomial_seq(N,List) :-
-    length(L3,N),
-    length(L1,N),
-    maplist(=(N),L1),
-    findall(X,between(1,N,X),L2),
-    maplist(binomial_co,L1,L2,L3),
-    append(List,[1],L3).
 cat_seq(0,[1]).
 cat_seq(N,List) :- 
     length(L,N),
