@@ -114,25 +114,15 @@ sum_geometric([H0|Seq],N,R) :-
     (Q #= 1 -> R is N1*H0;
     R is (((Q^N1)-1)*H0)/(Q-1)).
 
-factorial(X,R) :- factorial(X,1,R).
-factorial(X,R,R) :- X =< 1.
-factorial(X,Y,R) :- 
-    Y1 is Y*X,
-    X1 is X-1,
-    factorial(X1,Y1,R).
-/*Binomial Coefficient, N choose R where order doesn't matter*/
-binomial_co(N,R,Result) :-
-    factorial(N,R1),
-    factorial(N-R,R2),
-    factorial(R,R3),
-    R4 #= R2*R3,
-    Result is R1/R4.
 /*Catalan Numbers*/
 cat(N,R) :-
-    N2 is (2*N)-2,
-    N1 is N-1,
-    binomial_co(N2,N1,N3),
-    R is N3/N.
+    cat(1,N,1,R).
+cat(X,N,R,R) :- X>=N.
+cat(X,N,N1,R) :-
+    X<N,
+    X1 is X+1,
+    N2 is (((4*X1)-2)*N1)/(X1+1),
+    cat(X1,N,N2,R).
 /*Derangement Numbers*/
 der(N,R) :-
     der(2,N,0,1,R).
@@ -156,37 +146,22 @@ fib(X,N,F1,F2,R) :-
 /*Lucas Numbers*/
 lucas(N,R) :-
     fib(2,N,2,1,R).
-
+/*Special Sequence Info for User Display*/
+seq(cat,'**Catalan Numbers**').
+seq(fib,'**Fibonacci Numbers**').
+seq(der,'**Derangement Numbers**').
+seq(lucas,'**Lucas Numbers**').
+display(Goal) :- seq(Goal,S),write(S).
 /*Recognize Special Sequences*/
 special_rec(Seq) :-
     length(Seq,N),
-    (cat_seq(N,L1),L1=Seq -> write('**Catalan Numbers**'),!;
-    fib_seq(N,L3),L3=Seq -> write('**Fibonacci Numbers**'),!;
-    der_seq(N,L2),L2=Seq -> write('**Derangement Numbers**'),!;
-    lucas_seq(N,L4),L4=Seq -> write('**Lucas Numbers**')).
-/*Recognize Special Sequence and Output List with Nth Term*/
+    seq_gen(Goal,N,Seq) -> display(Goal).
+/*Recognize Special Sequence and Output Nth Term*/
 special_nth(Seq,N,R) :-
     length(Seq,L),L<N,
-    (cat_seq(L,Seq) -> cat_seq(N,R);
-    der_seq(L,Seq) -> der_seq(N,R);
-    fib_seq(L,Seq) -> fib_seq(N,R);
-    lucas_seq(L,Seq) -> lucas_seq(N,R)).
-
-/*Sequence Generators*/
-cat_seq(0,[1]).
-cat_seq(N,List) :- 
-    length(L,N),
+    seq_gen(Goal,L,Seq) -> call(Goal,N,R).
+/*Sequence Generator, from 1 to N (does not include 0th number)*/
+seq_gen(Goal,N,List) :-
+    length(L,N),seq(Goal,_),
     findall(X,between(1,N,X),L),
-    maplist(cat,L,List).
-der_seq(N,List) :-
-    length(List,N),
-    findall(X,between(1,N,X),L),
-    maplist(der,L,List).
-fib_seq(N,List) :-
-    length(List,N),
-    findall(X,between(1,N,X),L),
-    maplist(fib,L,List).
-lucas_seq(N,List) :-
-    length(List,N),
-    findall(X,between(1,N,X),L),
-    maplist(lucas,L,List).
+    maplist(Goal,L,List).
