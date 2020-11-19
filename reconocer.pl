@@ -114,14 +114,25 @@ sum_geometric([H0|Seq],N,R) :-
     (Q #= 1 -> R is N1*H0;
     R is (((Q^N1)-1)*H0)/(Q-1)).
 
-/*Catalan Numbers
-* C_n = \sum_{k=0}{n-1} C_k * C_{n-1-k}
-*/
-cat(_,_,[]).
-cat(A,B,[H|T]) :-
-    B1 is B+1,
-    H is 2 * (2 * B - 1) * A / B1,
-    cat(H,B1,T).
+factorial(X,R) :- factorial(X,1,R).
+factorial(X,R,R) :- X =< 1.
+factorial(X,Y,R) :- 
+    Y1 is Y*X,
+    X1 is X-1,
+    factorial(X1,Y1,R).
+/*Binomial Coefficient, N choose R where order doesn't matter*/
+binomial_co(N,R,Result) :-
+    factorial(N,R1),
+    factorial(N-R,R2),
+    factorial(R,R3),
+    R4 #= R2*R3,
+    Result is R1/R4.
+/*Catalan Numbers*/
+cat(N,R) :-
+    N2 is (2*N)-2,
+    N1 is N-1,
+    binomial_co(N2,N1,N3),
+    R is N3/N.
 /*Derangement Numbers*/
 der(N,R) :-
     der(2,N,0,1,R).
@@ -166,8 +177,8 @@ special_nth(Seq,N,R) :-
 cat_seq(0,[1]).
 cat_seq(N,List) :- 
     length(L,N),
-    List = [1 | L],
-    cat(1,1,List).
+    findall(X,between(1,N,X),L),
+    maplist(cat,L,List).
 der_seq(N,List) :-
     length(List,N),
     findall(X,between(1,N,X),L),
