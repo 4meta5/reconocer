@@ -160,8 +160,7 @@ lucas(N,R) :-
 /*Recognize Special Sequences*/
 special_rec(Seq) :-
     length(Seq,N),
-    N1 is N-1,
-    (cat_seq(N1,L1),L1=Seq -> write('**Catalan Numbers**'),!;
+    (cat_seq(N,L1),L1=Seq -> write('**Catalan Numbers**'),!;
     fib_seq(N,L3),L3=Seq -> write('**Fibonacci Numbers**'),!;
     der_seq(N,L2),L2=Seq -> write('**Derangement Numbers**'),!;
     lucas_seq(N,L4),L4=Seq -> write('**Lucas Numbers**')).
