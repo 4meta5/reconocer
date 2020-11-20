@@ -15,26 +15,31 @@ full :-
     write('To compute sum from X to N, call `sum(Seq,X,N,R)`').
 
 /*Recognize Sequence, Print Functions Available and Calling Information*/
+req(arithmetic,'~~Arithmetic Series~~').
+req(geometric,'~~Geometric Series~~').
+req(linear_rec,'Linear Homogenous Equation of Degree 2').
 rec(L) :-
     mincreasing(L),
     (special_rec(L),nl,half,!;
-    arithmetic(L,_) -> write('~~Arithmetic Series~~'),nl,full,!;
-    geometric(L,_) -> write('~~Geometric Series~~'),nl,full,!;
-    linear_rec(L,_) -> write('Linear Homogenous Eq of Deg2'),nl,half).
+    req(Goal,S),call(Goal,L,_) -> write(S),nl,full).
 /*Recognize Sequence and Compute Nth Term*/
+neq(nth_arithmetic).
+neq(nth_geometric).
+neq(nth_linear).
+nth_linear(L,N,R) :- linear_rec(L,X) -> linear_nth(X,N,R).
 nth(L,N,R) :-
     (special_nth(L,N,R);
-    nth_arithmetic(L,N,R);
-    nth_geometric(L,N,R);
-    linear_rec(L,X) -> linear_nth(X,N,R)).
+    neq(Goal),call(Goal,L,N,R)).
 /*Recognize Sequence and Compute Sum [0,N] s.t. X < N*/
-nsum(L,N,R) :- 
-    sum_arithmetic(L,N,R);sum_geometric(L,N,R).
+ssq(sum_geometric).
+ssq(sum_arithmetic).
+nsum(L,N,R) :- ssq(Goal),call(Goal,L,N,R).
 /*Recognize Sequence and Compute Sum [X,N] s.t. X < N*/
 sum(L,X,N,R) :-
     X<N,
-    (sum_arithmetic(L,X,R1) -> sum_arithmetic(L,N,R2),R is R2-R1;
-    sum_geometric(L,X,R1) -> sum_geometric(L,N,R2),R is R2-R1).
+    nsum(L,X,R1),
+    nsum(L,N,R2),
+    R is R2-R1.
 
 /*Quadratic Formula*/
 sqroot(X,R) :- X*X#=R,X#>=0.
@@ -84,14 +89,12 @@ linear_nth([[X1,C1],[X2,C2]],N,R) :-
     T2 is C2*(X2**N),
     R is T1+T2.
 
-arithmetic([X,Y],Q) :-
-    Q is Y-X.
+arithmetic([X,Y],Q) :- Y>X,Q is Y-X.
 arithmetic([X,Y,Z|T],Q) :-
     arithmetic([X,Y],Q),
     arithmetic([Y,Z|T],Q).
 
-geometric([X,Y],Q) :-
-    Q is Y/X.
+geometric([X,Y],Q) :- Y>X,Q is Y/X.
 geometric([X,Y,Z|T],Q) :-
     geometric([X,Y],Q),
     geometric([Y,Z|T],Q).

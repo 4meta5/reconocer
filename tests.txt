@@ -103,3 +103,34 @@ R = 1334961 .
 R = 76 .
 ?- special_nth([1,2,4,4,5,5],10,R).
 false.
+
+?- rec([1,3,5,7,9,11]).
+~~Arithmetic Series~~
+To compute the Nth term, call `nth(Seq,N,R)`
+To compute sum from 0 to N, call `nsum(Seq,N,R)`
+To compute sum from X to N, call `sum(Seq,X,N,R)`
+true .
+
+?- rec([1,5,25,125,625]).
+~~Geometric Series~~
+To compute the Nth term, call `nth(Seq,N,R)`
+To compute sum from 0 to N, call `nsum(Seq,N,R)`
+To compute sum from X to N, call `sum(Seq,X,N,R)`
+true .
+
+?- rec([1,1,2,3,5,8,13]).
+**Fibonacci Numbers**
+To compute the Nth term, call `nth(Seq,N,R)`
+true.
+?- rec([1,2,5,14,42,132,429,1430,4862]).
+**Catalan Numbers**
+To compute the Nth term, call `nth(Seq,N,R)`
+true.
+?- rec([0,1,2,9,44,265,1854,14833,133496,1334961]).
+**Derangement Numbers**
+To compute the Nth term, call `nth(Seq,N,R)`
+true.
+?- rec([1,1,1,1,1,1,1]).
+false.
+?- rec([1,2,1,2,1,2,1]).
+false.
