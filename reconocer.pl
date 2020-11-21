@@ -5,23 +5,20 @@ mincreasing([A,B]) :- A=<B.
 mincreasing([A,B,C|T]) :-
     mincreasing([A,B]),
     mincreasing([B,C|T]).
-
 /*Docs, called in rec output if input sequence is recognized*/
-half :-
-    write('To compute the Nth term, call `nth(Seq,N,R)`'),nl.
-full :-
-    half,
+docs :-
+    write('To compute the Nth term, call `nth(Seq,N,R)`'),nl,
     write('To compute sum from 0 to N, call `nsum(Seq,N,R)`'),nl,
     write('To compute sum from X to N, call `sum(Seq,X,N,R)`').
-
 /*Recognize Sequence, Print Functions Available and Calling Information*/
 req(arithmetic,'~~Arithmetic Series~~').
 req(geometric,'~~Geometric Series~~').
 req(linear_rec,'Linear Homogenous Equation of Degree 2').
 rec(L) :-
     mincreasing(L),
-    (special_rec(L),nl,full,!;
-    req(Goal,S),call(Goal,L,_) -> write(S),nl,full).
+    (special_rec(L);
+    req(Goal,S),call(Goal,L,_) -> write(S)),
+    nl,docs.
 /*Recognize Sequence and Compute Nth Term*/
 neq(nth_arithmetic).
 neq(nth_geometric).
@@ -40,7 +37,6 @@ sum(L,X,N,R) :-
     nsum(L,X,R1),
     nsum(L,N,R2),
     R is R2-R1.
-
 /*Quadratic Formula*/
 sqroot(X,R) :- X*X#=R,X#>=0.
 quadratic(A,B,C,R) :-
@@ -88,22 +84,22 @@ linear_nth([[X1,C1],[X2,C2]],N,R) :-
     T1 is C1*(X1**N),
     T2 is C2*(X2**N),
     R is T1+T2.
-
+/*Arithmetic Series*/
 arithmetic([X,Y],Q) :- Y>X,Q is Y-X.
 arithmetic([X,Y,Z|T],Q) :-
     arithmetic([X,Y],Q),
     arithmetic([Y,Z|T],Q).
-
+/*Geometric Series*/
 geometric([X,Y],Q) :- Y>X,Q is Y/X.
 geometric([X,Y,Z|T],Q) :-
     geometric([X,Y],Q),
     geometric([Y,Z|T],Q).
-
+/*Nth Term Formulas for Arithmetic and Geometric Series*/
 nth_arithmetic([H0|Seq],N,R) :-
     arithmetic([H0|Seq],Q) -> X is N*Q, R is H0+X.
 nth_geometric([H0|Seq],N,R) :-
     geometric([H0|Seq],Q) -> X is Q**N, R is H0*X.
-
+/*Sum Formulas for Arithmetic and Geometric Series*/
 sum_arithmetic([H0|_],0,H0).
 sum_arithmetic([H0|Seq],N,R) :-
     arithmetic([H0|Seq],Q),
@@ -116,7 +112,6 @@ sum_geometric([H0|Seq],N,R) :-
     N1 is N+1,
     (Q #= 1 -> R is N1*H0;
     R is (((Q^N1)-1)*H0)/(Q-1)).
-
 /*Catalan Numbers*/
 cat(N,R) :-
     cat(1,N,1,R).
@@ -150,7 +145,7 @@ fib(X,N,F1,F2,R) :-
 lucas(N,R) :-
     fib(2,N,2,1,R).
 /*Special Sequence Info for User Display
-* last value represents first n for which the sequence is defined (lower bound of domain)
+* last value is lower bound of domain
 */
 seq(cat,'**Catalan Numbers**',0).
 seq(fib,'**Fibonacci Numbers**',1).
