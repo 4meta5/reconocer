@@ -28,7 +28,7 @@ neq(nth_geometric).
 neq(nth_linear).
 neq(special_nth).
 nth_linear(L,N,R) :- linear_rec(L,X) -> linear_nth(X,N,R).
-nth(L,N,R) :-neq(Goal),call(Goal,L,N,R).
+nth(L,N,R) :- neq(Goal),call(Goal,L,N,R).
 /*Recognize Sequence and Compute Sum [0,N] s.t. X < N*/
 ssq(sum_geometric).
 ssq(sum_arithmetic).
@@ -139,8 +139,8 @@ der(X,N,D1,D2,R) :-
 /*Fibonacci Numbers*/
 fib(N,R) :-
     fib(2,N,1,1,R).
-fib(X,N,_,F2,F2) :-
-    X>=N.
+fib(X,N,F1,_,F1) :- X#>N.
+fib(X,N,_,F2,F2) :- X#=N.
 fib(X,N,F1,F2,R) :-
     X<N,
     X1 is X+1,
@@ -149,12 +149,14 @@ fib(X,N,F1,F2,R) :-
 /*Lucas Numbers*/
 lucas(N,R) :-
     fib(2,N,2,1,R).
-/*Special Sequence Info for User Display*/
-seq(cat,'**Catalan Numbers**').
-seq(fib,'**Fibonacci Numbers**').
-seq(der,'**Derangement Numbers**').
-seq(lucas,'**Lucas Numbers**').
-display(Goal) :- seq(Goal,S),write(S).
+/*Special Sequence Info for User Display
+* last value represents first n for which the sequence is defined (lower bound of domain)
+*/
+seq(cat,'**Catalan Numbers**',0).
+seq(fib,'**Fibonacci Numbers**',1).
+seq(der,'**Derangement Numbers**',1).
+seq(lucas,'**Lucas Numbers**',1).
+display(Goal) :- seq(Goal,S,_),write(S).
 /*Recognize Special Sequences*/
 special_rec(Seq) :-
     length(Seq,N),
@@ -166,8 +168,11 @@ special_nth(Seq,N,R) :-
 special_sum(Seq,N,R) :-
     length(Seq,L),
     seq_gen(Goal,L,Seq) -> seq_gen(Goal,N,X),sum(X,#=,R).
-/*Sequence Generator, from 1 to N (does not include 0th number)*/
+/*Sequence Generator for size N List, 
+* corresponding to first N values of the Goal's underlying sequence
+*/
 seq_gen(Goal,N,List) :-
-    length(L,N),seq(Goal,_),
-    findall(X,between(1,N,X),L),
+    length(L,N),seq(Goal,_,I),
+    (I#=1 -> findall(X,between(I,N,X),L);
+    N1 is N-1,findall(X,between(I,N1,X),L)),
     maplist(Goal,L,List).
