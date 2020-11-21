@@ -20,19 +20,19 @@ req(geometric,'~~Geometric Series~~').
 req(linear_rec,'Linear Homogenous Equation of Degree 2').
 rec(L) :-
     mincreasing(L),
-    (special_rec(L),nl,half,!;
+    (special_rec(L),nl,full,!;
     req(Goal,S),call(Goal,L,_) -> write(S),nl,full).
 /*Recognize Sequence and Compute Nth Term*/
 neq(nth_arithmetic).
 neq(nth_geometric).
 neq(nth_linear).
+neq(special_nth).
 nth_linear(L,N,R) :- linear_rec(L,X) -> linear_nth(X,N,R).
-nth(L,N,R) :-
-    (special_nth(L,N,R);
-    neq(Goal),call(Goal,L,N,R)).
+nth(L,N,R) :-neq(Goal),call(Goal,L,N,R).
 /*Recognize Sequence and Compute Sum [0,N] s.t. X < N*/
 ssq(sum_geometric).
 ssq(sum_arithmetic).
+ssq(special_sum).
 nsum(L,N,R) :- ssq(Goal),call(Goal,L,N,R).
 /*Recognize Sequence and Compute Sum [X,N] s.t. X < N*/
 sum(L,X,N,R) :-
@@ -163,6 +163,9 @@ special_rec(Seq) :-
 special_nth(Seq,N,R) :-
     length(Seq,L),L<N,
     seq_gen(Goal,L,Seq) -> call(Goal,N,R).
+special_sum(Seq,N,R) :-
+    length(Seq,L),
+    seq_gen(Goal,L,Seq) -> seq_gen(Goal,N,X),sum(X,#=,R).
 /*Sequence Generator, from 1 to N (does not include 0th number)*/
 seq_gen(Goal,N,List) :-
     length(L,N),seq(Goal,_),
