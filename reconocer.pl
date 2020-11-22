@@ -1,25 +1,41 @@
 :- use_module(library(clpfd)).
 
+/*Ensure Every Input Sequence is Monotonically Increasing*/
+mincreasing([A,B]) :- A=<B.
+mincreasing([A,B,C|T]) :-
+    mincreasing([A,B]),
+    mincreasing([B,C|T]).
+/*Docs, called in rec output if input sequence is recognized*/
+docs :-
+    write('To compute the Nth term, call `nth(Seq,N,R)`'),nl,
+    write('To compute sum from 0 to N, call `nsum(Seq,N,R)`'),nl,
+    write('To compute sum from X to N, call `sum(Seq,X,N,R)`').
 /*Recognize Sequence, Print Functions Available and Calling Information*/
+req(arithmetic,'~~Arithmetic Series~~').
+req(geometric,'~~Geometric Series~~').
+req(linear_rec,'Linear Homogenous Equation of Degree 2').
 rec(L) :-
-    arithmetic(L,_) -> write('Arithmetic Series');
-    geometric(L,_) -> write('Geometric Series');
-    linear_rec(L,_) -> write('Linear Homogenous Eq of Deg2');
-    special_rec(L); write('Sequence Not Recognized').
+    (special_rec(L);
+    mincreasing(L),req(Goal,S),call(Goal,L,_) -> write(S)),
+    nl,docs.
 /*Recognize Sequence and Compute Nth Term*/
-nth(L,N,R) :-
-    (nth_arithmetic(L,N,R);
-    nth_geometric(L,N,R);
-    linear_rec(L,X) -> linear_nth(X,N,R);
-    special_nth(L,N,X) -> append(_,[R],X)).
+neq(nth_arithmetic).
+neq(nth_geometric).
+neq(nth_linear).
+neq(special_nth).
+nth_linear(L,N,R) :- linear_rec(L,X) -> linear_nth(X,N,R).
+nth(L,N,R) :- neq(Goal),call(Goal,L,N,R).
+/*Recognize Sequence and Compute Sum [0,N] s.t. X < N*/
+ssq(sum_geometric).
+ssq(sum_arithmetic).
+ssq(special_sum).
+nsum(L,N,R) :- ssq(Goal),call(Goal,L,N,R).
 /*Recognize Sequence and Compute Sum [X,N] s.t. X < N*/
-nsum(L,N,R) :- 
-    sum_arithmetic(L,N,R);sum_geometric(L,N,R).
 sum(L,X,N,R) :-
     X<N,
-    (sum_arithmetic(L,X,R1) -> sum_arithmetic(L,N,R2),R is R2-R1;
-    sum_geometric(L,X,R1) -> sum_geometric(L,N,R2),R is R1-R2).
-
+    nsum(L,X,R1),
+    nsum(L,N,R2),
+    R is R2-R1.
 /*Quadratic Formula*/
 sqroot(X,R) :- X*X#=R,X#>=0.
 quadratic(A,B,C,R) :-
@@ -67,26 +83,22 @@ linear_nth([[X1,C1],[X2,C2]],N,R) :-
     T1 is C1*(X1**N),
     T2 is C2*(X2**N),
     R is T1+T2.
-
-arithmetic([X,Y],Q) :-
-    Q is Y-X.
-arithmetic([X,Y|T],Q) :-
-    length(T,Z),Z>0,
+/*Arithmetic Series*/
+arithmetic([X,Y],Q) :- Y>X,Q is Y-X.
+arithmetic([X,Y,Z|T],Q) :-
     arithmetic([X,Y],Q),
-    arithmetic([Y|T],Q).
-
-geometric([X,Y],Q) :-
-    Q is Y/X.
-geometric([X,Y|T],Q) :-
-    length(T,Z),Z>0,
+    arithmetic([Y,Z|T],Q).
+/*Geometric Series*/
+geometric([X,Y],Q) :- Y>X,Q is Y/X.
+geometric([X,Y,Z|T],Q) :-
     geometric([X,Y],Q),
-    geometric([Y|T],Q).
-
+    geometric([Y,Z|T],Q).
+/*Nth Term Formulas for Arithmetic and Geometric Series*/
 nth_arithmetic([H0|Seq],N,R) :-
     arithmetic([H0|Seq],Q) -> X is N*Q, R is H0+X.
 nth_geometric([H0|Seq],N,R) :-
     geometric([H0|Seq],Q) -> X is Q**N, R is H0*X.
-
+/*Sum Formulas for Arithmetic and Geometric Series*/
 sum_arithmetic([H0|_],0,H0).
 sum_arithmetic([H0|Seq],N,R) :-
     arithmetic([H0|Seq],Q),
@@ -99,43 +111,30 @@ sum_geometric([H0|Seq],N,R) :-
     N1 is N+1,
     (Q #= 1 -> R is N1*H0;
     R is (((Q^N1)-1)*H0)/(Q-1)).
-
-factorial(X,R) :- factorial(X,1,R).
-factorial(X,R,R) :- X =< 1.
-factorial(X,Y,R) :- 
-    Y1 is Y*X,
-    X1 is X-1,
-    factorial(X1,Y1,R).
-/*Binomial Coefficient, N choose R where order doesn't matter*/
-binomial_co(N,R,Result) :-
-    factorial(N,R1),
-    factorial(N-R,R2),
-    factorial(R,R3),
-    R4 #= R2*R3,
-    Result is R1/R4.
-
-/*Catalan Numbers
-* C_n = \sum_{k=0}{n-1} C_k * C_{n-1-k}
-*/
-cat(_,_,[]).
-cat(A,B,[H|T]) :-
-    B1 is B+1,
-    H is 2 * (2 * B - 1) * A / B1,
-    cat(H,B1,T).
+/*Catalan Numbers*/
+cat(N,R) :-
+    cat(1,N,1,R).
+cat(X,N,R,R) :- X>=N.
+cat(X,N,N1,R) :-
+    X<N,
+    X1 is X+1,
+    N2 is (((4*X1)-2)*N1)/(X1+1),
+    cat(X1,N,N2,R).
 /*Derangement Numbers*/
-der(1,0).
-der(2,1).
 der(N,R) :-
-    N1 is N-1,
-    N2 is N-2,
-    der(N1,R1),
-    der(N2,R2),
-    R is (N1 * (R1 + R2)).
+    der(2,N,0,1,R).
+der(X,N,R,_,R) :- X is N+1.
+der(X,N,_,R,R) :- X=N.
+der(X,N,D1,D2,R) :-
+    X<N,
+    X1 is X+1,
+    D3 is (X * (D1 + D2)),
+    der(X1,N,D2,D3,R).
 /*Fibonacci Numbers*/
 fib(N,R) :-
     fib(2,N,1,1,R).
-fib(X,N,_,F2,F2) :-
-    X>=N.
+fib(X,N,F1,_,F1) :- X#>N.
+fib(X,N,_,F2,F2) :- X#=N.
 fib(X,N,F1,F2,R) :-
     X<N,
     X1 is X+1,
@@ -144,47 +143,41 @@ fib(X,N,F1,F2,R) :-
 /*Lucas Numbers*/
 lucas(N,R) :-
     fib(2,N,2,1,R).
-
+/*Involution Numbers
+* https://oeis.org/A000085
+*/
+tel(N,R) :- tel(1,N,1,1,R).
+tel(X,N,_,T2,T2) :- X#>=N.
+tel(X,N,T1,T2,R) :-
+    X<N,
+    X1 is X+1,
+    T3 is T2+(X*T1),
+    tel(X1,N,T2,T3,R).
+/*Special Sequence Info for User Display
+* last value is lower bound of domain
+*/
+seq(cat,'**Catalan Numbers**',0).
+seq(fib,'**Fibonacci Numbers**',1).
+seq(der,'**Derangement Numbers**',1).
+seq(lucas,'**Lucas Numbers**',1).
+seq(tel,'**Involution Numbers**',0).
+display(Goal) :- seq(Goal,S,_),write(S).
 /*Recognize Special Sequences*/
 special_rec(Seq) :-
     length(Seq,N),
-    (cat_seq(N,L1),L1=Seq -> write('Catalan Numbers'),!;
-    der_seq(N,L2),L2=Seq -> write('Derangement Numbers'),!;
-    fib_seq(N,L3),L3=Seq -> write('Fibonacci Numbers'),!;
-    lucas_seq(N,L4),L4=Seq -> write('Lucas Numbers'),!;
-    binomial_seq(N,L5),L5=Seq -> write('Binomial Coefficients'),!;
-    write('Special Sequence Not Recognized')).
-/*Recognize Special Sequence and Output List with Nth Term*/
+    seq_gen(Goal,N,Seq) -> display(Goal).
+/*Recognize Special Sequence and Output Nth Term*/
 special_nth(Seq,N,R) :-
     length(Seq,L),L<N,
-    (cat_seq(L,Seq) -> cat_seq(N,R);
-    der_seq(L,Seq) -> der_seq(N,R);
-    fib_seq(L,Seq) -> fib_seq(N,R);
-    lucas_seq(L,Seq) -> lucas_seq(N,R);
-    binomial_seq(L,Seq) -> binomial_seq(N,R)).
-
-/*Sequence Generators*/
-binomial_seq(N,List) :-
-    length(L3,N),
-    length(L1,N),
-    maplist(=(N),L1),
-    findall(X,between(1,N,X),L2),
-    maplist(binomial_co,L1,L2,L3),
-    append(List,[1],L3).
-cat_seq(0,[1]).
-cat_seq(N,List) :- 
-    length(L,N),
-    List = [1 | L],
-    cat(1,1,List).
-der_seq(N,List) :-
-    length(List,N),
-    findall(X,between(1,N,X),L),
-    maplist(der,L,List).
-fib_seq(N,List) :-
-    length(List,N),
-    findall(X,between(1,N,X),L),
-    maplist(fib,L,List).
-lucas_seq(N,List) :-
-    length(List,N),
-    findall(X,between(1,N,X),L),
-    maplist(lucas,L,List).
+    seq_gen(Goal,L,Seq) -> call(Goal,N,R).
+special_sum(Seq,N,R) :-
+    length(Seq,L),
+    seq_gen(Goal,L,Seq) -> seq_gen(Goal,N,X),sum(X,#=,R).
+/*Sequence Generator for size N List, 
+* corresponding to first N values of the Goal's underlying sequence
+*/
+seq_gen(Goal,N,List) :-
+    length(L,N),seq(Goal,_,I),
+    (I#=1 -> findall(X,between(I,N,X),L);
+    N1 is N-1,findall(X,between(I,N1,X),L)),
+    maplist(Goal,L,List).
