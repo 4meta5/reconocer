@@ -15,9 +15,8 @@ req(arithmetic,'~~Arithmetic Series~~').
 req(geometric,'~~Geometric Series~~').
 req(linear_rec,'Linear Homogenous Equation of Degree 2').
 rec(L) :-
-    mincreasing(L),
     (special_rec(L);
-    req(Goal,S),call(Goal,L,_) -> write(S)),
+    mincreasing(L),req(Goal,S),call(Goal,L,_) -> write(S)),
     nl,docs.
 /*Recognize Sequence and Compute Nth Term*/
 neq(nth_arithmetic).
@@ -144,6 +143,16 @@ fib(X,N,F1,F2,R) :-
 /*Lucas Numbers*/
 lucas(N,R) :-
     fib(2,N,2,1,R).
+/*Involution Numbers
+* https://oeis.org/A000085
+*/
+tel(N,R) :- tel(1,N,1,1,R).
+tel(X,N,_,T2,T2) :- X#>=N.
+tel(X,N,T1,T2,R) :-
+    X<N,
+    X1 is X+1,
+    T3 is T2+(X*T1),
+    tel(X1,N,T2,T3,R).
 /*Special Sequence Info for User Display
 * last value is lower bound of domain
 */
@@ -151,6 +160,7 @@ seq(cat,'**Catalan Numbers**',0).
 seq(fib,'**Fibonacci Numbers**',1).
 seq(der,'**Derangement Numbers**',1).
 seq(lucas,'**Lucas Numbers**',1).
+seq(tel,'**Involution Numbers**',0).
 display(Goal) :- seq(Goal,S,_),write(S).
 /*Recognize Special Sequences*/
 special_rec(Seq) :-
