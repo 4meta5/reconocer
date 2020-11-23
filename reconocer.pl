@@ -42,7 +42,7 @@ dif([X1,X2],1,[Y]) :- Y #= X2-X1.
 dif([H1,H2|T1],1,[H3|T2]) :-
     dif([H1,H2],1,[H3]),
     dif([H2|T1],1,T2).
-dif(L,N,R) :- dif(L,0,N,R).
+dif(L,N,R) :- length(L,N1),N1>N,dif(L,0,N,R).
 dif(R,X,N,R) :- X>=N.
 dif(L,X,N,R) :-
     X<N,X1 is X+1,
