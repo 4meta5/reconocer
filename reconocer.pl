@@ -48,6 +48,32 @@ dif(L,X,N,R) :-
     X<N,X1 is X+1,
     dif(L,1,L1),
     dif(L1,X1,N,R).
+/*Factorial Function*/
+factorial(X,R) :- factorial(X,1,R).
+factorial(X,R,R) :- X =< 1.
+factorial(X,Y,R) :- 
+    Y1 is Y*X,
+    X1 is X-1,
+    factorial(X1,Y1,R).
+/*Binomial Coefficient, N choose R where order doesn't matter*/
+binomial_co(N,R,Result) :-
+    factorial(N,R1),
+    factorial(N-R,R2),
+    factorial(R,R3),
+    Result is R1/(R2*R3).
+/*Polynomial
+* The general term of the sequence whose difference table has its 0th diagonal 
+* equal to c_0,c_1,...,c_p,0,0,0,.., where c_p != 0 is a polynomial in n of 
+* degree p satisfying h_n = c_0 * (n choose 0) + c_1 * (n choose 1) + ... + c_p * (n choose p)
+*/
+poly(Coeff,N,R) :-
+    length(Coeff,P1),P is P1-1,
+    length(L1,P1),length(L2,P1),
+    findall(X,between(0,P,X),L1),
+    maplist(=(N),L2),
+    maplist(binomial_co,L2,L1,R1),
+    maplist(*,Coeff,R1,R2),
+    sum(R2,#=,R).
 /*Quadratic Formula*/
 sqroot(X,R) :- X*X#=R,X#>=0.
 quadratic(A,B,C,R) :-
