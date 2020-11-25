@@ -21,7 +21,6 @@ rec(L) :-
 /*Recognize Sequence and Compute Nth Term*/
 neq(nth_arithmetic).
 neq(nth_geometric).
-neq(nth_linear).
 neq(special_nth).
 neq(linear_nth).
 nth(L,N,R) :- neq(Goal),call(Goal,L,N,R).
@@ -171,12 +170,11 @@ nth_arithmetic([H0|Seq],N,R) :-
 nth_geometric([H0|Seq],N,R) :-
     geometric([H0|Seq],Q) -> X is Q**N, R is H0*X.
 /*Sum Formulas for Arithmetic and Geometric Series*/
-sum_arithmetic([H0|_],0,H0).
 sum_arithmetic([H0|Seq],N,R) :-
     arithmetic([H0|Seq],Q),
-    X is (N+1)*H0,
-    Y is Q*N*(N+1)*0.5,
-    R is X+Y.
+    N1 is N+1,
+    AN is (H0+(N*Q)),
+    R is integer(((H0+AN)/2)*N1).
 sum_geometric([H0|_],0,H0).
 sum_geometric([H0|Seq],N,R) :-
     geometric([H0|Seq],Q),
