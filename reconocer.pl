@@ -21,14 +21,14 @@ rec(L) :-
 /*Recognize Sequence and Compute Nth Term*/
 neq(nth_arithmetic).
 neq(nth_geometric).
-neq(nth_linear).
 neq(special_nth).
-nth_linear(L,N,R) :- linear_rec(L,X) -> linear_nth(X,N,R).
+neq(linear_nth).
 nth(L,N,R) :- neq(Goal),call(Goal,L,N,R).
 /*Recognize Sequence and Compute Sum [0,N] s.t. X < N*/
 ssq(sum_geometric).
 ssq(sum_arithmetic).
 ssq(special_sum).
+ssq(linear_sum).
 nsum(L,N,R) :- ssq(Goal),call(Goal,L,N,R).
 /*Recognize Sequence and Compute Sum [X,N] s.t. X < N*/
 sum(L,X,N,R) :-
@@ -36,6 +36,62 @@ sum(L,X,N,R) :-
     nsum(L,X,R1),
     nsum(L,N,R2),
     R is R2-R1.
+/*Difference Sequence*/
+dif(L,0,L).
+dif([X1,X2],1,[Y]) :- Y #= X2-X1.
+dif([H1,H2|T1],1,[H3|T2]) :-
+    dif([H1,H2],1,[H3]),
+    dif([H2|T1],1,T2).
+dif(L,N,R) :- length(L,N1),N1>N,dif(L,0,N,R).
+dif(R,X,N,R) :- X>=N.
+dif(L,X,N,R) :-
+    X<N,X1 is X+1,
+    dif(L,1,L1),
+    dif(L1,X1,N,R).
+/*Return 0th Diagonal of Difference Sequence Triangle*/
+head([H|_], H).
+heads(L,X) :- maplist(head,L,X).
+diagonal(L,R) :-
+    length(L,D),length(L2,D),D1 is D-1,
+    findall(X,between(0,D1,X),L1),
+    maplist(=(L),L2),
+    maplist(dif,L2,L1,R1),
+    heads(R1,R).
+/*Factorial Function*/
+factorial(X,R) :- factorial(X,1,R).
+factorial(X,R,R) :- X =< 1.
+factorial(X,Y,R) :- 
+    Y1 is Y*X,
+    X1 is X-1,
+    factorial(X1,Y1,R).
+/*Binomial Coefficient, N choose R where order doesn't matter*/
+binomial_co(N,R,Result) :-
+    factorial(N,R1),
+    factorial(N-R,R2),
+    factorial(R,R3),
+    Result is R1/(R2*R3).
+/*Generate N Degree Polynomial from N+1 Points*/
+mul(X,Y,R) :- R is X*Y.
+poly(L,N,R) :-
+    diagonal(L,Coeff),
+    length(Coeff,P1),P is P1-1,
+    length(L1,P1),length(L2,P1),
+    findall(X,between(0,P,X),L1),
+    maplist(=(N),L2),
+    maplist(binomial_co,L2,L1,R1),
+    maplist(mul,Coeff,R1,R2),
+    sum(R2,#=,R).
+/*Calculate Partials Sums for Any Sequence Expressed As Polynomial*/
+poly_sum(L,N,R) :-
+    diagonal(L,Coeff),
+    length(Coeff,P1),
+    length(L1,P1),length(L2,P1),
+    findall(X,between(1,P1,X),L1),
+    N1 is N+1,
+    maplist(=(N1),L2),
+    maplist(binomial_co,L2,L1,R1),
+    maplist(mul,Coeff,R1,R2),
+    sum(R2,#=,R).
 /*Quadratic Formula*/
 sqroot(X,R) :- X*X#=R,X#>=0.
 quadratic(A,B,C,R) :-
@@ -78,11 +134,21 @@ linear_rec(Seq,[[X1,C1],[X2,C2]]) :-
     linear_par(Seq,[B,C],[A0,A1]),
     NB is -B,NC is -C,quadratic(1,NB,NC,[X1,X2]),
     linear_sys(1,1,A0,X1,X2,A1,-10,10,C1,C2).
-/*Nth Term Formula: A_n = C1*X1^n + C2*X2^n from first arg [[X1,C1],[X2,C2]]*/
-linear_nth([[X1,C1],[X2,C2]],N,R) :-
+/*Nth Term Formula: A_n = C1*X1^n + C2*X2^n*/
+linear_nth(Seq,N,R) :-
+    linear_rec(Seq,[[X1,C1],[X2,C2]]),
+    linth(X1,C1,X2,C2,N,R).
+linth(X1,C1,X2,C2,N,R) :-
     T1 is C1*(X1**N),
     T2 is C2*(X2**N),
     R is T1+T2.
+linear_sum(Seq,N,R) :-
+    linear_rec(Seq,[[X1,C1],[X2,C2]]),N1 is N+1,
+    length(L2,N1),length(L3,N1),length(L4,N1),length(L5,N1),
+    findall(X,between(0,N,X),L1),
+    maplist(=(X1),L2),maplist(=(C1),L3),maplist(=(X2),L4),maplist(=(C2),L5),
+    maplist(linth,L2,L3,L4,L5,L1,R1),
+    sum(R1,#=,R).
 /*Arithmetic Series*/
 arithmetic([X,Y],Q) :- Y>X,Q is Y-X.
 arithmetic([X,Y,Z|T],Q) :-
@@ -99,12 +165,11 @@ nth_arithmetic([H0|Seq],N,R) :-
 nth_geometric([H0|Seq],N,R) :-
     geometric([H0|Seq],Q) -> X is Q**N, R is H0*X.
 /*Sum Formulas for Arithmetic and Geometric Series*/
-sum_arithmetic([H0|_],0,H0).
 sum_arithmetic([H0|Seq],N,R) :-
     arithmetic([H0|Seq],Q),
-    X is (N+1)*H0,
-    Y is Q*N*(N+1)*0.5,
-    R is X+Y.
+    N1 is N+1,
+    AN is (H0+(N*Q)),
+    R is integer(((H0+AN)/2)*N1).
 sum_geometric([H0|_],0,H0).
 sum_geometric([H0|Seq],N,R) :-
     geometric([H0|Seq],Q),

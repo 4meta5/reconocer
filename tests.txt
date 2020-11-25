@@ -26,50 +26,116 @@ X = [2, 7].
 
 ?- linear_rec([2,7,11,25,47],R).
 R = [[-1, -1], [2, 3]].
-
-?- linear_nth([[-1, -1], [2, 3]],5,R).
+?- linear_nth([2,7,11,25,47],5,R).
 R = 97.
-?- linear_nth([[-1, -1], [2, 3]],4,R).
+?- linear_nth([2,7,11,25,47],4,R).
 R = 47.
-?- linear_nth([[-1, -1], [2, 3]],3,R).
+?- linear_nth([2,7,11,25,47],3,R).
 R = 25.
+?- linear_sum([2,7,11,25,47],4,R).
+R = 92.
+?- linear_sum([2,7,11,25,47],3,R).
+R = 45.
 
-?- nth_arithmetic([1,3,5,7],11,R).
-R = 23.
-?- nth_arithmetic([1,6,11,16],11,R).
-R = 56.
-?- nth_geometric([1,4,16,64],6,R).
-R = 4096.
-?- nth_geometric([1,3,9,27,81],6,R).
-R = 729.
-
-?- sum_arithmetic([1,3,5,7],3,R).
-R = 16.0 .
-?- sum_arithmetic([1,3,5,7],2,R).
-R = 9.0 .
-?- sum_arithmetic([1,3,5,7],10,R).
-R = 121.0 .
-?- sum_arithmetic([1,3,5,7],11,R).
-R = 144.0 .
-?- sum_arithmetic([1,6,11,16],2,R).
-R = 18.0 .
-?- sum_arithmetic([1,6,11,16],3,R).
-R = 34.0 .
-?- sum_arithmetic([1,6,11,16],11,R).
-R = 342.0 .
-
-?- sum_geometric([1,4,16,64],6,R).
-R = 5461 .
-?- sum_geometric([1,4,16,64],2,R).
+%Arithmetic Nth Term
+?- nth([1,3,5,7],0,R).
+R = 1 .
+?- nth([1,3,5,7],1,R).
+R = 3 .
+?- nth([1,3,5,7],2,R).
+R = 5 .
+?- nth([1,3,5,7],3,R).
+R = 7 .
+?- nth([1,3,5,7],4,R).
+R = 9 .
+?- nth([1,3,5,7],5,R).
+R = 11 .
+%Geometric Nth Term
+?- nth([1,4,16,64],0,R).
+R = 1 .
+?- nth([1,4,16,64],1,R).
+R = 4 .
+?- nth([1,4,16,64],2,R).
+R = 16 .
+?- nth([1,4,16,64],3,R).
+R = 64 .
+?- nth([1,4,16,64],4,R).
+R = 256 .
+?- nth([1,4,16,64],5,R).
+R = 1024 .
+%Linear Nth Term
+?- nth([2,7,11,25,47],0,R).
+R = 2.
+?- nth([2,7,11,25,47],1,R).
+R = 7.
+?- nth([2,7,11,25,47],2,R).
+R = 11.
+?- nth([2,7,11,25,47],3,R).
+R = 25.
+?- nth([2,7,11,25,47],4,R).
+R = 47.
+?- nth([2,7,11,25,47],5,R).
+R = 97.
+%Arithmetic Sums 0 to N
+?- nsum([1,3,5,7],0,R).
+R = 1 .
+?- nsum([1,3,5,7],1,R).
+R = 4 .
+?- nsum([1,3,5,7],2,R).
+R = 9 .
+?- nsum([1,3,5,7],3,R).
+R = 16 .
+?- nsum([1,3,5,7],4,R).
+R = 25 .
+?- nsum([1,3,5,7],5,R).
+R = 36 .
+%Arithmetic Sums X to N
+?- sum([1,3,5,7],2,4,R).
+R = 16 .
+?- sum([1,3,5,7],1,4,R).
 R = 21 .
-?- sum_geometric([1,4,16,64],3,R).
+?- sum([1,3,5,7],1,3,R).
+R = 12 .
+%Geometric Sums 0 to N
+?- nsum([1,4,16,64],0,R).
+R = 1 .
+?- nsum([1,4,16,64],1,R).
+R = 5 .
+?- nsum([1,4,16,64],2,R).
+R = 21 .
+?- nsum([1,4,16,64],3,R).
 R = 85 .
-?- sum_geometric([1,3,9,27,81],6,R).
-R = 1093 .
-?- sum_geometric([1,3,9,27,81],2,R).
-R = 13 .
-?- sum_geometric([1,3,9,27,81],3,R).
-R = 40 .
+?- nsum([1,4,16,64],4,R).
+R = 341 .
+?- nsum([1,4,16,64],5,R).
+R = 1365 .
+%Linear Sums 0 to N
+?- nsum([2,7,11,25,47],0,R).
+R = 2 .
+?- nsum([2,7,11,25,47],1,R).
+R = 9.
+?- nsum([2,7,11,25,47],2,R).
+R = 20.
+?- nsum([2,7,11,25,47],3,R).
+R = 45.
+?- nsum([2,7,11,25,47],4,R).
+R = 92.
+?- nsum([2,7,11,25,47],5,R).
+R = 189.
+%Geometric Sums X to N
+?- sum([1,4,16,64],1,3,R).
+R = 80 .
+?- sum([1,4,16,64],2,3,R).
+R = 64 .
+?- sum([1,4,16,64],2,4,R).
+R = 320 .
+%Linear Sums X to N
+?- sum([2,7,11,25,47],0,1,R).
+R = 7 .
+?- sum([2,7,11,25,47],1,3,R).
+R = 36.
+?- sum([2,7,11,25,47],1,4,R).
+R = 83.
 
 ?- seq_gen(fib,10,R),write(R).
 [1,1,2,3,5,8,13,21,34,55]
@@ -118,6 +184,12 @@ To compute the Nth term, call `nth(Seq,N,R)`
 To compute sum from 0 to N, call `nsum(Seq,N,R)`
 To compute sum from X to N, call `sum(Seq,X,N,R)`
 true.
+?- rec([1,1,2,4,10,26,76,232,764,2620]).
+**Involution Numbers**
+To compute the Nth term, call `nth(Seq,N,R)`
+To compute sum from 0 to N, call `nsum(Seq,N,R)`
+To compute sum from X to N, call `sum(Seq,X,N,R)`
+true .
 ?- rec([1,3,5,7,9,11]).
 ~~Arithmetic Series~~
 To compute the Nth term, call `nth(Seq,N,R)`
@@ -136,12 +208,6 @@ To compute the Nth term, call `nth(Seq,N,R)`
 To compute sum from 0 to N, call `nsum(Seq,N,R)`
 To compute sum from X to N, call `sum(Seq,X,N,R)`
 true .
-?- rec([1,1,2,4,10,26,76,232,764,2620]).
-**Involution Numbers**
-To compute the Nth term, call `nth(Seq,N,R)`
-To compute sum from 0 to N, call `nsum(Seq,N,R)`
-To compute sum from X to N, call `sum(Seq,X,N,R)`
-true .
 
 ?- special_nth([1,2,4,4,5,5],10,R).
 false.
@@ -153,3 +219,36 @@ R = 55 .
 R = 1334961 .
 ?- special_nth([2,1,3,4,7,11,18],10,R).
 R = 76 .
+
+?- dif([1,3,17,49],1,R).
+R = [2, 14, 32] .
+?- dif([2,14,32],1,R).
+R = [12, 18] .
+?- dif([1,3,17,49],2,R).
+R = [12, 18] .
+?- dif([12,18],1,R).
+R = [6] .
+?- dif([1,3,17,49],3,R).
+R = [6] .
+?- dif([1,3,17,49],4,R).
+false.
+
+?- poly([0,1,16,81,256],5,R).
+R = 625 .
+?- poly([0,1,16,81,256],6,R).
+R = 1296 .
+?- poly([0,1,16,81,256],7,R).
+R = 2401 .
+?- poly([0,1,16,81,256],8,R).
+R = 4096 .
+?- poly([0,1,16,81,256],9,R).
+R = 6561 .
+?- poly([0,1,16,81,256],10,R).
+R = 10000 .
+
+?- poly_sum([0,1,16,81,256],4,R).
+R = 354 .
+?- poly_sum([0,1,16,81,256],5,R).
+R = 979 .
+?- poly_sum([0,1,16,81,256],6,R).
+R = 2275 .
