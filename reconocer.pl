@@ -70,12 +70,7 @@ binomial_co(N,R,Result) :-
     factorial(N-R,R2),
     factorial(R,R3),
     Result is R1/(R2*R3).
-/*Generate N Degree Polynomial from N+1 Points
-* The general term of the sequence whose difference table has its 0th diagonal 
-* equal to c_0,c_1,...,c_p,0,0,0,.., where c_p != 0 is a polynomial in n of 
-* degree p satisfying
-* h_n = c_0 * (n choose 0) + c_1 * (n choose 1) + ... + c_p * (n choose p)
-*/
+/*Generate N Degree Polynomial from N+1 Points*/
 mul(X,Y,R) :- R is X*Y.
 poly(L,N,R) :-
     diagonal(L,Coeff),

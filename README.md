@@ -5,6 +5,7 @@ Recognize Recurrence Relations, Special Sequences, and Generate Polynomials
 ## References
 * [prolog higher-order predicates](https://www.metalevel.at/prolog/metapredicates)
 * [automatically finding recurrence relations from integer sequences](http://www.ryanhmckenna.com/2015/06/automatically-finding-recurrence.html)
+* [Introductory Combinatorics by Richard A. Brualdi](https://www.pearson.com/us/higher-education/program/Brualdi-Introductory-Combinatorics-Classic-Version-5th-Edition/PGM1714686.html)
 
 ## Usage
 
@@ -189,8 +190,7 @@ R = 92.
 R = 189.
 ```
 
-Likewise, the sum from X to N can be manually verified:
-
+The sum from X to N:
 ```prolog
 ?- sum([2,7,11,25,47],0,1,R).
 R = 7 .
@@ -203,19 +203,120 @@ R = 83.
 * `nsum(3)-nsum(1)`=45-9=36
 * `nsum(4)-nsum(1)`=92-9=83
 
-*[TODO: implement for degree >2](https://github.com/4meta5/reconocer/issues/2)*
+*[implement for degree >2](https://github.com/4meta5/reconocer/issues/2)*
 
 ### Special Sequences
 
-* Fibonacci Numbers
-* Lucas Numbers
-* Catalan Numbers
-* Derangement Numbers
-* Involution Numbers
+The following special sequences have tail recursive implementations that use accumulators to compute upwards instead of downwards:
+* [Fibonacci Numbers](https://en.wikipedia.org/wiki/Fibonacci_number)
+* [Lucas Numbers](https://en.wikipedia.org/wiki/Lucas_number)
+* [Catalan Numbers](https://en.wikipedia.org/wiki/Catalan_number)
+* [Derangement Numbers](https://en.wikipedia.org/wiki/Derangement)
+* [Involution Numbers](https://oeis.org/A000085)
+
+For any given input sequence of size N, each of the special sequences is generated and compared. This implements naive recognition for inputs of length N with the first N elements of each special sequence. [Issue 5](https://github.com/4meta5/reconocer/issues/5) tracks extending the recognition heuristic to subsequences and the underlying relation.
+
+```prolog
+?-  rec([1,1,2,3,5,8,13]).
+**Fibonacci Numbers**
+To compute the Nth term, call `nth(Seq,N,R)`
+To compute sum from 0 to N, call `nsum(Seq,N,R)`
+To compute sum from X to N, call `sum(Seq,X,N,R)`
+true.
+?- rec([2,1,3,4,7,11,18,29,47,76,123]).
+**Lucas Numbers**
+To compute the Nth term, call `nth(Seq,N,R)`
+To compute sum from 0 to N, call `nsum(Seq,N,R)`
+To compute sum from X to N, call `sum(Seq,X,N,R)`
+true .
+?- rec([1,1,2,5,14,42,132,429,1430,4862]).
+**Catalan Numbers**
+To compute the Nth term, call `nth(Seq,N,R)`
+To compute sum from 0 to N, call `nsum(Seq,N,R)`
+To compute sum from X to N, call `sum(Seq,X,N,R)`
+true.
+?- rec([0,1,2,9,44,265,1854,14833,133496,1334961]).
+**Derangement Numbers**
+To compute the Nth term, call `nth(Seq,N,R)`
+To compute sum from 0 to N, call `nsum(Seq,N,R)`
+To compute sum from X to N, call `sum(Seq,X,N,R)`
+true.
+?- rec([1,1,2,4,10,26,76,232,764,2620]).
+**Involution Numbers**
+To compute the Nth term, call `nth(Seq,N,R)`
+To compute sum from 0 to N, call `nsum(Seq,N,R)`
+To compute sum from X to N, call `sum(Seq,X,N,R)`
+true .
+```
+
+*In the code*, the Nth term predicate for every sequence is called implicitly in the sequence generation meta-predicate.
+
+```prolog
+seq(cat,'**Catalan Numbers**',0).
+seq(fib,'**Fibonacci Numbers**',1).
+seq(der,'**Derangement Numbers**',1).
+seq(lucas,'**Lucas Numbers**',1).
+seq(tel,'**Involution Numbers**',0).
+seq_gen(Goal,N,List) :-
+    length(L,N),seq(Goal,_,I),
+    (I#=1 -> findall(X,between(I,N,X),L);
+    N1 is N-1,findall(X,between(I,N1,X),L)),
+    maplist(Goal,L,List).
+```
+
+The `Goal` in `seq_gen` is an element of the set of first arguments of the `seq` predicates. Each atom corresponds to a 2-arity predicate to compute the Nth term of the respective sequence.
+
+This allows us to generate any of the special sequences manually up to size N=10 with the following queries:
+```prolog
+?- seq_gen(fib,10,R),write(R).
+[1,1,2,3,5,8,13,21,34,55]
+R = [1, 1, 2, 3, 5, 8, 13, 21, 34|...] .
+?- seq_gen(cat,10,R),write(R).
+[1,1,2,5,14,42,132,429,1430,4862]
+R = [1, 1, 2, 5, 14, 42, 132, 429, 1430|...] .
+?- seq_gen(der,10,R),write(R).
+[0,1,2,9,44,265,1854,14833,133496,1334961]
+R = [0, 1, 2, 9, 44, 265, 1854, 14833, 133496|...] .
+?- seq_gen(lucas,10,R),write(R).
+[2,1,3,4,7,11,18,29,47,76]
+R = [2, 1, 3, 4, 7, 11, 18, 29, 47|...] .
+?- seq_gen(tel,10,R),write(R).
+[1,1,2,4,10,26,76,232,764,2620]
+R = [1, 1, 2, 4, 10, 26, 76, 232, 764|...] .
+```
 
 ### Generating Polynomials
 
-For any distinct `n+1` points, there is a unique polynomial of degree `n` which passes through all points. 
+For any distinct `n+1` points, there is a unique polynomial of degree `n` which passes through all points. For any sequence of integers, we use the 0th diagonal of its difference sequence triangle as the coefficients in a unique polynomial of degree `n` that satisfies `(0,h_0),(1,h_1),...,(n,h_n)`. 
 
-For our purposes, an input sequence can be interpreted as the euclidean coordinates `(n,h(n))` s.t. `h(n)` is the `nth` term of the input sequence. In particular, we can generate a unique polynomial for any integer sequence from its difference sequences.
+*Thm 8.2.2* The general term of the sequence whose difference table has its 0th diagonal equal to c_0,c_1,...,c_p,0,0,0,.., where c_p != 0 is a polynomial in n of degree p satisfying 
+```h_n = c_0 * (n choose 0) + c_1 * (n choose 1) + ... + c_p * (n choose p)```
 
+We can use this formula to compute the general Nth term (as long as N is greater than the length of the input sequence).
+
+```prolog
+?- poly([0,1,16,81,256],5,R).
+R = 625 .
+?- poly([0,1,16,81,256],6,R).
+R = 1296 .
+?- poly([0,1,16,81,256],7,R).
+R = 2401 .
+?- poly([0,1,16,81,256],8,R).
+R = 4096 .
+?- poly([0,1,16,81,256],9,R).
+R = 6561 .
+?- poly([0,1,16,81,256],10,R).
+R = 10000 .
+```
+
+*Thm 8.2.3* Assume that the sequence h_0,h_1,h_2,...,h_n,... has a difference table whose 0th diagonal equals c_0,c_1,...,c_p,0,0,0,.... Then, 
+```\sum_{k=0}{n} h_k = c_0 * (n+1 choose 1) + c1 * (n+1 choose 2) + ... + c_p (n+1 choose p+1)```
+
+```prolog
+?- poly_sum([0,1,16,81,256],4,R).
+R = 354 .
+?- poly_sum([0,1,16,81,256],5,R).
+R = 979 .
+?- poly_sum([0,1,16,81,256],6,R).
+R = 2275 .
+```
